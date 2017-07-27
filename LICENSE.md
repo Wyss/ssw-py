@@ -2,7 +2,7 @@
 
 The MIT License
 
-Copyright (c) 2015 Wyss Institute at Harvard University
+Copyright (c) 2017 Wyss Institute at Harvard University
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 http://www.opensource.org/licenses/mit-license.php
 
-## Original source
+## Original source, just uses C implementation
+https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
+commit 4140dcf
 
 License: MIT
 
@@ -36,8 +38,16 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Author: Mengyao Zhao & Wan-Ping Lee
+Author:
+C implementation: Mengyao Zhao
+C++ wrapper: Wan-Ping Lee
+Python wrapper: Yongan Zhao
+Java wrapper: Daniel Cameron
 
-Contact: Mengyao Zhao <zhaomengyao@gmail.com>
+Contact:
+Mengyao Zhao zhaomengyao@gmail.com
+Wan-Ping Lee wanping.lee@gmail.com
+Yongan Zhao zhaoyanswill@gmail.com
+Daniel Cameron cameron.d@wehi.edu.au
 
-Last revision: 07/30/2015
+Last revision: 06/29/2016
