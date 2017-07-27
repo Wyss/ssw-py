@@ -7,7 +7,7 @@ test with:
 DESCRIPTION = ("Complete Complete Striped Smith-Waterman Library")
 LONG_DESCRIPTION = """
 **sswpy** is a Python package
-Cythonized wrapped version of 
+Cythonized wrapped version of
 
 https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
 
@@ -15,6 +15,9 @@ Original authors should be cited if used.
 
 License is MIT
 """
+
+# Initialize subtree with
+# git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
 
 DISTNAME = 'sswpy'
 LICENSE = 'MIT'
