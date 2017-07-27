@@ -57,7 +57,7 @@ PACKAGE_PATH =      os.path.abspath(os.path.dirname(__file__))
 MODULE_PATH =       pjoin(PACKAGE_PATH, 'ssw')
 DATASETS_PATH =     pjoin(MODULE_PATH, 'datasets')
 
-common_include = ['src']
+common_include = ['lib/CSSWL/src', 'lib']
 
 if sys.platform == 'win32':
     extra_compile_args = ['']
@@ -72,8 +72,8 @@ ssw_ext = Extension(
     'ssw.sswpy',
     depends=[],
     sources=['ssw/sswpy.pyx',
-             'src/ssw.c',
-             'src/str_util.c'],
+             'lib/CSSWL/src/ssw.c',
+             'lib/str_util.c'],
     include_dirs=common_include + [numpy.get_include()],
     extra_compile_args=extra_compile_args
 )
