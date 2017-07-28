@@ -135,6 +135,7 @@ cdef class SSW:
                     cigar_array[j] = to_cigar_int(length, letter)
                     j += 1
                 res_align.cigar = cigar_array
+                res_align.cigarLen = len(cigar)//2
             else:
                 res_align.cigar = NULL
             res_align.score1 = result["optimal_score"]
