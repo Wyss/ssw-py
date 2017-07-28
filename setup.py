@@ -48,7 +48,7 @@ ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
                  os.walk(DATASETS_PATH) for f in files if '.fa' in f]
 
 ssw_ext = Extension(
-    'ssw.sswpy',
+    'sswpy',
     depends=[],
     sources=['ssw/sswpy.pyx',
              'lib/CSSWL/src/ssw.c',
