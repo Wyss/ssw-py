@@ -4,40 +4,17 @@
 test with:
     python setup.py build_ext --inplace
 """
-DESCRIPTION = ("Complete Complete Striped Smith-Waterman Library")
+DESCRIPTION = ("Complete Striped Smith-Waterman Library for Python")
 LONG_DESCRIPTION = """
-**sswpy** is a Python package
-Cythonized wrapped version of
+**ssw-py** is a Python package
+Cythonized wrapped version of:
 
 https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
 
-Original authors should be cited if used.
+Original C library authors and paper should be cited if used.
 
 License is MIT
 """
-
-# Initialize subtree with
-# git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
-
-DISTNAME = 'sswpy'
-LICENSE = 'MIT'
-AUTHORS = "Nick Conway"
-EMAIL = "nick.conway@wyss.harvard.edu"
-URL = ""
-DOWNLOAD_URL = ''
-CLASSIFIERS = [
-    'Development Status :: 1 - Beta',
-    'Environment :: Console',
-    'Intended Audience :: Science/Research',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.3',
-    'Programming Language :: Python :: 3.4',
-    'Programming Language :: Cython',
-    'Topic :: Scientific/Engineering',
-]
 
 try:
     from setuptools import setup, Extension
@@ -49,6 +26,8 @@ import numpy.distutils.misc_util
 import os
 import sys
 import shutil
+import re
+import ast
 
 pjoin = os.path.join
 rpath = os.path.relpath
@@ -86,19 +65,50 @@ cython_extensions = [
 ]
 cython_ext_list = cythonize(cython_extensions,
                             compile_time_env={'IS_PY_THREE': is_py_3})
+
+# Initialize subtree with
+# git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
+
+# Begin modified code from Flask's version getter
+# BSD license
+# Copyright (c) 2015 by Armin Ronacher and contributors.
+# https://github.com/pallets/flask
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('ssw/__init__.py', 'rb') as initfile:
+    VERSION = str(ast.literal_eval(_version_re.search(
+                                   initfile.read().decode('utf-8')).group(1)))
+
+DISTNAME = 'ssw-py'
+LICENSE = 'MIT'
+AUTHORS = "Nick Conway"
+EMAIL = "nick.conway@wyss.harvard.edu"
+CLASSIFIERS = [
+    'Development Status :: 4 - Beta',
+    'Environment :: Console',
+    'Intended Audience :: Science/Research',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Cython',
+    'Topic :: Scientific/Engineering',
+]
+
 setup(
     name=DISTNAME,
-    maintainer=AUTHORS,
-    packages=['ssw', 'ssw.sswpy'],
+    version=VERSION,
+    author=AUTHORS,
+    author_email=EMAIL,
+    url='https://github.com/Wyss/ssw-py',
+    packages=['ssw'],
     ext_modules=cython_ext_list,
     include_dirs=numpy.distutils.misc_util.get_numpy_include_dirs(),
     package_data={'ssw': ssw_files},
-    maintainer_email=EMAIL,
     description=DESCRIPTION,
-    license=LICENSE,
-    url=URL,
-    download_url=DOWNLOAD_URL,
     long_description=LONG_DESCRIPTION,
+    license=LICENSE,
     classifiers=CLASSIFIERS,
     zip_safe=False
 )
