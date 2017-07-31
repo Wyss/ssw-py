@@ -13,6 +13,8 @@ https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
 
 Original C library authors and paper should be cited if used.
 
+Support for Python 3 and Python 2 at the moment
+
 License is MIT
 """
 
@@ -34,7 +36,7 @@ rpath = os.path.relpath
 
 PACKAGE_PATH =      os.path.abspath(os.path.dirname(__file__))
 MODULE_PATH =       pjoin(PACKAGE_PATH, 'ssw')
-DATASETS_PATH =     pjoin(MODULE_PATH, 'datasets')
+# DATASETS_PATH =     pjoin(MODULE_PATH, 'datasets')
 
 common_include = ['lib/CSSWL/src', 'lib']
 
@@ -44,8 +46,9 @@ else:
     extra_compile_args = ['-Wno-unused-function']
 
 # fasta dataset files to include in installation
-ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
-                 os.walk(DATASETS_PATH) for f in files if '.fa' in f]
+# ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
+#                  os.walk(DATASETS_PATH) for f in files if '.fa' in f]
+ssw_files = []
 
 ssw_ext = Extension(
     'ssw.sswpy',
