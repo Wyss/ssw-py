@@ -71,6 +71,12 @@ cdef class SSW:
 
     def __init__(self,  int match_score=2,
                         int mismatch_penalty=2):
+        """ Requires a
+
+        Args:
+            match_score (int): for scoring matches
+            mismatch_penalty (int): for scoring mismatches 
+        """
         self.score_matrix = <int8_t*> PyMem_Malloc(25*sizeof(int8_t))
         self.buildDNAScoreMatrix(   <uint8_t>match_score,
                                     <uint8_t> mismatch_penalty,
@@ -112,6 +118,15 @@ cdef class SSW:
     def printResult(self, result, start_idx=0):
         """ rebuild a s_align struct from a result dictionary
         so as to be able to call ssw terminal print functions
+
+        Args: 
+            result (dict): dictionary containing tthe result from a call to SSW.align
+
+        Kwargs:
+            start_idx: index to start printing from. defaults to 0
+
+        raises:
+            MemoryError
         """
         cdef uint32_t* cigar_array = NULL
         cdef s_align *res_align = NULL
@@ -154,7 +169,9 @@ cdef class SSW:
     # end def
 
     def setRead(self, object read):
-        """
+        """ Set the query read string
+        read (str):  String-like (str or bytestring) that represents the read.
+                    Must be set
         """
         cdef Py_ssize_t read_length
         cdef const char* read_cstr = c_util.obj_to_cstr_len(read, &read_length)
@@ -181,6 +198,10 @@ cdef class SSW:
     # end def
 
     def setReference(self, object reference):
+        """ Set the query reference string
+        read (str):  String-like (str or bytestring) that represents the reference sequence
+                        Must be set
+        """
         cdef Py_ssize_t ref_length
         cdef const char* ref_cstr = c_util.obj_to_cstr_len(reference, &ref_length)
         cdef int8_t* ref_arr = <int8_t*> PyMem_Malloc(ref_length*sizeof(char))
@@ -194,7 +215,7 @@ cdef class SSW:
     # end def
 
     cdef s_align* align_c(self, int gap_open, int gap_extension, Py_ssize_t start_idx, int32_t mod_ref_length) except NULL:
-        """
+        """ C version of the alignment code
         """
         cdef Py_ssize_t read_length
         cdef const char* read_cstr = c_util.obj_to_cstr_len(self.read, &read_length)
