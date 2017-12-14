@@ -27,3 +27,10 @@ if __name__ == '__main__':
     a.printResult(res)
     print(")))))))))))))))))))")
     printer(res, ref.decode('utf8'), "ACGT")
+
+    print("4. start_idx test")
+    b = SSW()
+    b.setRead("ACTG")
+    b.setReference("ACTCACTG")
+    res = b.align(start_idx=4)
+    b.printResult(res, start_idx=4)

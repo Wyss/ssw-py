@@ -3,6 +3,13 @@
 """
 test with:
     python setup.py build_ext --inplace
+
+build wheels with:
+    python setup.py bdist_wheel --plat-name win_amd64 --python-tag cp36
+    python setup.py bdist_wheel --plat-name macosx_10_10_x86_64 --python-tag cp36
+    twine upload dist/*
+
+https://pypi.python.org/pypi/ssw-py
 """
 DESCRIPTION = ("Complete Striped Smith-Waterman Library for Python")
 LONG_DESCRIPTION = """
@@ -36,7 +43,6 @@ rpath = os.path.relpath
 
 PACKAGE_PATH =      os.path.abspath(os.path.dirname(__file__))
 MODULE_PATH =       pjoin(PACKAGE_PATH, 'ssw')
-# DATASETS_PATH =     pjoin(MODULE_PATH, 'datasets')
 
 common_include = ['lib/CSSWL/src', 'lib']
 
@@ -94,7 +100,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
     'Programming Language :: Cython',
     'Topic :: Scientific/Engineering',
 ]

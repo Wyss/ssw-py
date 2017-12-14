@@ -107,10 +107,10 @@ cdef class SSW:
         print(self.read)
         if result != NULL:
             read_cstr = c_util.obj_to_cstr_len(self.read, &read_length)
-            ref_cstr = c_util.obj_to_cstr_len(self.reference[start_idx:], &ref_length)
+            ref_cstr = c_util.obj_to_cstr_len(self.reference, &ref_length)
 
             ssw_write_cigar(result)
-            ssw_writer(result, ref_cstr, read_cstr)
+            ssw_writer(result, &ref_cstr[start_idx], read_cstr)
         return 0
     # end def
 
@@ -239,7 +239,7 @@ cdef class SSW:
     # end def
 
     def align(self, int gap_open=3, int gap_extension=1,
-        Py_ssize_t start_idx=0, Py_ssize_t end_idx=0):
+                    Py_ssize_t start_idx=0, Py_ssize_t end_idx=0):
         """ Align a read to the reference with optional index offseting
 
         returns a dictionary no matter what as align_c can't return
