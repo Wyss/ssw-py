@@ -7,6 +7,7 @@ test with:
 build wheels with:
     python setup.py bdist_wheel --plat-name win_amd64 --python-tag cp36
     python setup.py bdist_wheel --plat-name macosx_10_10_x86_64 --python-tag cp36
+    python setup.py sdist --formats=gztar
     twine upload dist/*
 
 https://pypi.python.org/pypi/ssw-py
