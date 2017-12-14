@@ -75,7 +75,7 @@ cdef class SSW:
 
         Args:
             match_score (int): for scoring matches
-            mismatch_penalty (int): for scoring mismatches 
+            mismatch_penalty (int): for scoring mismatches
         """
         self.score_matrix = <int8_t*> PyMem_Malloc(25*sizeof(int8_t))
         self.buildDNAScoreMatrix(   <uint8_t>match_score,
@@ -119,7 +119,7 @@ cdef class SSW:
         """ rebuild a s_align struct from a result dictionary
         so as to be able to call ssw terminal print functions
 
-        Args: 
+        Args:
             result (dict): dictionary containing tthe result from a call to SSW.align
 
         Kwargs:
@@ -227,7 +227,7 @@ cdef class SSW:
         if self.profile != NULL:
             result = ssw_align ( self.profile,
                                 &self.ref_arr[start_idx],
-                                self.ref_length - mod_ref_length,
+                                mod_ref_length,
                                 gap_open,
                                 gap_extension,
                                 1, 0, 0, mask_len)
@@ -238,7 +238,8 @@ cdef class SSW:
         return result
     # end def
 
-    def align(self, int gap_open=3, int gap_extension=1, Py_ssize_t start_idx=0, Py_ssize_t end_idx=0):
+    def align(self, int gap_open=3, int gap_extension=1,
+        Py_ssize_t start_idx=0, Py_ssize_t end_idx=0):
         """ Align a read to the reference with optional index offseting
 
         returns a dictionary no matter what as align_c can't return
@@ -248,12 +249,12 @@ cdef class SSW:
             gap_open (int):         penalty for gap_open. default 3
             gap_extension (int):    penalty for gap_extension. default 1
             start_idx (Py_ssize_t): index to start search. default 0
-            end_idx (Py_ssize_t):   index to end search (trying to avoid a target region). 
+            end_idx (Py_ssize_t):   index to end search (trying to avoid a target region).
                                     default 0 means use whole reference length
 
         Returns:
             dict    with keys   `CIGAR`,        <for depicting alignment>
-                                `optimal_score`, 
+                                `optimal_score`,
                                 `sub-optimal_score`,
                                 `target_begin`, <index into reference>
                                 `target_end`,   <index into reference>
@@ -269,13 +270,13 @@ cdef class SSW:
         cdef uint32_t length
         cdef int32_t search_length
         cdef Py_ssize_t end_idx_final
-        
+
         if start_idx < 0 or end_idx < 0:
             raise ValueError("negative indexing not supported")
         if end_idx > self.ref_length or start_idx > self.ref_length:
             err = "start_idx: {} or end_idx: {} can't be greater than ref_length: {}".format(
-                                                start_idx, 
-                                                end_idx, 
+                                                start_idx,
+                                                end_idx,
                                                 self.ref_length)
             raise ValueError(err)
         if end_idx == 0:
