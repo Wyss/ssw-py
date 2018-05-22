@@ -1,15 +1,15 @@
 def printer(res, ref, read):
     print("optimal_score: %d\tsub-optimal_score: %d\t" %
-        (res['optimal_score'], res["sub-optimal_score"]))
-    target_begin = res['target_begin']
+        (res.optimal_score, res.sub_optimal_score))
+    target_begin = res.target_begin
     if target_begin >= 0:
         print("target_begin: %d\t" % (target_begin), end='')
-    print("target_end: %d\t" % (res['target_end']) )
-    query_begin = res['query_begin']
+    print("target_end: %d\t" % (res.target_end) )
+    query_begin = res.query_begin
     if query_begin >= 0:
         print("query_begin: %d\t" % (query_begin), end='')
-    print("query_end: %d\n" % (res['query_end']))
-    cigar = res['CIGAR']
+    print("query_end: %d\n" % (res.query_end))
+    cigar = res.CIGAR
 
     if cigar is not None:
         e = 0

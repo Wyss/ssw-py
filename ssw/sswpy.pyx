@@ -1,11 +1,13 @@
 
 #cython: boundscheck=False, wraparound=False
-from cpython.mem cimport PyMem_Malloc, PyMem_Realloc, PyMem_Free
+from typing import (
+    NamedTuple,
+    Union
+)
+
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cython.operator cimport postincrement as inc
-from libc.string cimport memcpy
-from libc.stdio cimport printf
 from libc.stdint cimport int32_t, uint32_t, uint16_t, int8_t, uint8_t
-from libc.stdlib cimport malloc, free
 
 cimport c_util
 
@@ -46,6 +48,19 @@ cdef extern from "ssw.h":
     char cigar_int_to_op (uint32_t)
     uint32_t cigar_int_to_len(uint32_t)
     uint32_t to_cigar_int(uint32_t, char)
+
+Alignment = NamedTuple("Alignment", [
+        ('CIGAR', str),
+        ('optimal_score', int),
+        ('sub_optimal_score', int),
+        ('target_begin', int),
+        ('target_end', int),
+        ('query_begin', int),
+        ('query_end', int)
+    ]
+)
+
+STR_T = Union[str, bytes]
 
 
 cdef class SSW:
@@ -115,14 +130,12 @@ cdef class SSW:
     # end def
 
 
-    def printResult(self, result, start_idx=0):
+    def printResult(self, result: Alignment, start_idx: int = 0):
         """ rebuild a s_align struct from a result dictionary
         so as to be able to call ssw terminal print functions
 
         Args:
-            result (dict): dictionary containing tthe result from a call to SSW.align
-
-        Kwargs:
+            result: Alignment containing tthe result from a call to SSW.align
             start_idx: index to start printing from. defaults to 0
 
         raises:
@@ -139,7 +152,7 @@ cdef class SSW:
             res_align = <s_align*> PyMem_Malloc(sizeof(s_align))
             if res_align == NULL:
                 raise MemoryError('Out of Memory')
-            cigar = result.get('CIGAR')
+            cigar = result.CIGAR
             if cigar is not None:
                 cigar_array = <uint32_t*> PyMem_Malloc(len(cigar)//2*sizeof(uint32_t))
                 if cigar_array == NULL:
@@ -154,12 +167,12 @@ cdef class SSW:
                 res_align.cigarLen = len(cigar)//2
             else:
                 res_align.cigar = NULL
-            res_align.score1 = result["optimal_score"]
-            res_align.score2 = result["sub-optimal_score"]
-            res_align.ref_begin1 = result["target_begin"]
-            res_align.ref_end1 = result["target_end"]
-            res_align.read_begin1 = result["query_begin"]
-            res_align.read_end1 = result["query_end"]
+            res_align.score1 = result.optimal_score
+            res_align.score2 = result.sub_optimal_score
+            res_align.ref_begin1 = result.target_begin
+            res_align.ref_end1 = result.target_end
+            res_align.read_begin1 = result.query_begin
+            res_align.read_end1 = result.query_end
 
             self.printResult_c(res_align, start_idx)
         finally:
@@ -168,9 +181,11 @@ cdef class SSW:
             PyMem_Free(res_align)
     # end def
 
-    def setRead(self, object read):
+    def setRead(self, read: STR_T):
         """ Set the query read string
-        read (str):  String-like (str or bytestring) that represents the read.
+
+        Args:
+            read:  String-like (str or bytestring) that represents the read.
                     Must be set
         """
         cdef Py_ssize_t read_length
@@ -197,10 +212,12 @@ cdef class SSW:
                                 )
     # end def
 
-    def setReference(self, object reference):
-        """ Set the query reference string
-        read (str):  String-like (str or bytestring) that represents the reference sequence
-                        Must be set
+    def setReference(self, reference: STR_T):
+        """Set the query reference string
+
+        Args:
+            reference:  String-like (str or bytestring) that represents the
+                reference sequence must be set
         """
         cdef Py_ssize_t ref_length
         cdef const char* ref_cstr = c_util.obj_to_cstr_len(reference, &ref_length)
@@ -214,8 +231,12 @@ cdef class SSW:
         self.ref_length = ref_length
     # end def
 
-    cdef s_align* align_c(self, int gap_open, int gap_extension, Py_ssize_t start_idx, int32_t mod_ref_length) except NULL:
-        """ C version of the alignment code
+    cdef s_align* align_c(self,
+        int gap_open,
+        int gap_extension,
+        Py_ssize_t start_idx,
+        int32_t mod_ref_length) except NULL:
+        """C version of the alignment code
         """
         cdef Py_ssize_t read_length
         cdef const char* read_cstr = c_util.obj_to_cstr_len(self.read, &read_length)
@@ -238,14 +259,17 @@ cdef class SSW:
         return result
     # end def
 
-    def align(self, int gap_open=3, int gap_extension=1,
-                    Py_ssize_t start_idx=0, Py_ssize_t end_idx=0):
-        """ Align a read to the reference with optional index offseting
+    def align(self,
+        int gap_open = 3,
+        int gap_extension = 1,
+        Py_ssize_t start_idx = 0,
+        Py_ssize_t end_idx = 0) -> Alignment:
+        '''Align a read to the reference with optional index offseting
 
         returns a dictionary no matter what as align_c can't return
         NULL
 
-        Kwargs:
+        Args:
             gap_open (int):         penalty for gap_open. default 3
             gap_extension (int):    penalty for gap_extension. default 1
             start_idx (Py_ssize_t): index to start search. default 0
@@ -253,7 +277,7 @@ cdef class SSW:
                                     default 0 means use whole reference length
 
         Returns:
-            dict    with keys   `CIGAR`,        <for depicting alignment>
+            Alignment with keys `CIGAR`,        <for depicting alignment>
                                 `optimal_score`,
                                 `sub-optimal_score`,
                                 `target_begin`, <index into reference>
@@ -263,7 +287,7 @@ cdef class SSW:
 
         Raises
             ValueError
-        """
+        '''
         cdef Py_ssize_t c
         cdef char letter
         cdef int letter_int
@@ -298,15 +322,15 @@ cdef class SSW:
                 letter_int = letter
                 length = cigar_int_to_len(result.cigar[c])
                 cigar += "%d%s" % (<int>length, chr(letter_int))
-        out = {
-                "CIGAR":   cigar,
-                "optimal_score": result.score1,
-                "sub-optimal_score": result.score2,
-                "target_begin": result.ref_begin1,
-                "target_end": result.ref_end1,
-                "query_begin": result.read_begin1,
-                "query_end": result.read_end1
-        }
+        out = Alignment(
+                cigar,
+                result.score1,
+                result.score2,
+                result.ref_begin1,
+                result.ref_end1,
+                result.read_begin1,
+                result.read_end1
+        )
         #print("RAW BEGIN")
         #self.printResult_c(result)
         #print("RAW END")
@@ -314,9 +338,10 @@ cdef class SSW:
         return out
     # end def
 
-    cdef int buildDNAScoreMatrix(self,  const uint8_t match_score,
-                                    const uint8_t mismatch_penalty,
-                                    int8_t* matrix) except -1:
+    cdef int buildDNAScoreMatrix(self,
+        const uint8_t match_score,
+        const uint8_t mismatch_penalty,
+        int8_t* matrix) except -1:
         """
         mismatch_penalty should be positive
 
@@ -345,3 +370,38 @@ cdef class SSW:
         return 0
     # end def
 # end class
+
+def forceAlign( read: STR_T,
+                reference: STR_T,
+                force_overhang: bool = False,
+                aligner: SSW = None) -> Alignment:
+    '''Enforces no gaps by raising the ``gap_open`` penalty
+
+    Args:
+        read:
+        reference:
+        force_overhang: Make sure only one end overhangs
+        aligner: pass an existing :class:`SSW` object
+    Raises:
+        ValueError for no solution found
+    '''
+    a: SSW = SSW() if aligner is None else aligner
+    a.setRead(read)
+    a.setReference(reference)
+    len_x: int = len(read)
+    # set the gap_open penalty high to drop all splits in alignment
+    # pick the first max hit
+    res: Alignment = a.align(gap_open=len_x)
+    if res.optimal_score < 4:
+        raise ValueError("No solution found")
+    if force_overhang:
+        # read must align to either the beginning or end of the reference string
+        if (res.target_begin != 0 or
+            res.target_end != len(reference) - 1):
+            raise ValueError("Read does not align to one overhang")
+    return res
+# end def
+
+def printForceAlign(read: STR_T, reference: STR_T, alignment: Alignment):
+    print(c_util._str(reference))
+    print(' '*(alignment.target_begin - alignment.query_begin) + c_util._str(read))

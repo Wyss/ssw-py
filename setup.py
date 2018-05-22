@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
+'''
 test with:
     python setup.py build_ext --inplace
 
@@ -11,9 +11,9 @@ build wheels with:
     twine upload dist/*
 
 https://pypi.python.org/pypi/ssw-py
-"""
+'''
 DESCRIPTION = ("Complete Striped Smith-Waterman Library for Python")
-LONG_DESCRIPTION = """
+LONG_DESCRIPTION = '''
 **ssw-py** is a Python package
 Cythonized wrapped version of:
 
@@ -21,17 +21,16 @@ https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
 
 Original C library authors and paper should be cited if used.
 
-Support for Python 3 and Python 2 at the moment
+Support for Python 3 at the moment
 
 License is MIT
-"""
+'''
 
 try:
     from setuptools import setup, Extension
 except ImportError:
     from distutils.core import setup, Extension
 
-from Cython.Build import cythonize
 import numpy.distutils.misc_util
 import os
 import sys
@@ -59,22 +58,12 @@ ssw_files = []
 
 ssw_ext = Extension(
     'ssw.sswpy',
-    depends=[],
     sources=['ssw/sswpy.pyx',
              'lib/CSSWL/src/ssw.c',
              'lib/str_util.c'],
     include_dirs=common_include + [numpy.get_include()],
     extra_compile_args=extra_compile_args
 )
-# ssw_files.append('sswpy.pxd')
-
-is_py_3 = int(sys.version_info[0] > 2)
-
-cython_extensions = [
-    ssw_ext
-]
-cython_ext_list = cythonize(cython_extensions,
-                            compile_time_env={'IS_PY_THREE': is_py_3})
 
 # Initialize subtree with
 # git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
@@ -98,9 +87,7 @@ CLASSIFIERS = [
     'Environment :: Console',
     'Intended Audience :: Science/Research',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Cython',
     'Topic :: Scientific/Engineering',
@@ -113,7 +100,7 @@ setup(
     author_email=EMAIL,
     url='https://github.com/Wyss/ssw-py',
     packages=['ssw'],
-    ext_modules=cython_ext_list,
+    ext_modules=[ssw_ext],
     include_dirs=numpy.distutils.misc_util.get_numpy_include_dirs(),
     package_data={'ssw': ssw_files},
     description=DESCRIPTION,
