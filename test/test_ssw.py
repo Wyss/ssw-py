@@ -4,7 +4,7 @@ import unittest
 try:
     from ssw import (
         SSW,
-        __version__
+        __version__,
         forceAlign
     )
 except:
@@ -14,7 +14,7 @@ except:
     sys.path.append(SSW_PATH)
     from ssw import (
         SSW,
-        __version__
+        __version__,
         forceAlign
     )
 
