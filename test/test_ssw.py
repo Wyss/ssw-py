@@ -5,7 +5,7 @@ try:
     from ssw import (
         SSW,
         __version__,
-        forceAlign
+        force_align
     )
 except:
     import sys
@@ -14,11 +14,8 @@ except:
     sys.path.append(SSW_PATH)
     from ssw import (
         SSW,
-        __version__,
-        forceAlign
+        force_align
     )
-
-# print(__version__)
 
 class TestSSW(unittest.TestCase):
 
@@ -64,5 +61,5 @@ class TestSSW(unittest.TestCase):
     def test_forceAlign(self):
         read = b"ACTG"
         ref = b"TTTTCTGCCCCCACG"
-        res = forceAlign(read, ref)
-        # printForceAlign(read, ref, res)
+        res = force_align(read, ref)
+        # print_force_align(read, ref, res)

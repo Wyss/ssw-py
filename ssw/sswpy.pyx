@@ -371,7 +371,7 @@ cdef class SSW:
     # end def
 # end class
 
-def forceAlign( read: STR_T,
+def force_align( read: STR_T,
                 reference: STR_T,
                 force_overhang: bool = False,
                 aligner: SSW = None) -> Alignment:
@@ -402,6 +402,16 @@ def forceAlign( read: STR_T,
     return res
 # end def
 
-def printForceAlign(read: STR_T, reference: STR_T, alignment: Alignment):
+def print_force_align(  read: STR_T,
+                        reference: STR_T,
+                        alignment: Alignment):
+    '''Does not truncate strings
+
+    Args:
+        read:
+        reference:
+        alignment:
+    '''
     print(c_util._str(reference))
     print(' '*(alignment.reference_start - alignment.read_start) + c_util._str(read))
+# end def
