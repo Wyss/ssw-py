@@ -53,10 +53,10 @@ Alignment = NamedTuple("Alignment", [
         ('CIGAR', str),
         ('optimal_score', int),
         ('sub_optimal_score', int),
-        ('target_begin', int),
-        ('target_end', int),
-        ('query_begin', int),
-        ('query_end', int)
+        ('reference_start', int),
+        ('reference_end', int),
+        ('read_start', int),
+        ('read_end', int)
     ]
 )
 
@@ -169,10 +169,10 @@ cdef class SSW:
                 res_align.cigar = NULL
             res_align.score1 = result.optimal_score
             res_align.score2 = result.sub_optimal_score
-            res_align.ref_begin1 = result.target_begin
-            res_align.ref_end1 = result.target_end
-            res_align.read_begin1 = result.query_begin
-            res_align.read_end1 = result.query_end
+            res_align.ref_begin1 = result.reference_start
+            res_align.ref_end1 = result.reference_end
+            res_align.read_begin1 = result.read_start
+            res_align.read_end1 = result.read_end
 
             self.printResult_c(res_align, start_idx)
         finally:
@@ -280,10 +280,10 @@ cdef class SSW:
             Alignment with keys `CIGAR`,        <for depicting alignment>
                                 `optimal_score`,
                                 `sub-optimal_score`,
-                                `target_begin`, <index into reference>
-                                `target_end`,   <index into reference>
-                                `query_begin`,  <index into read>
-                                `query_end`     <index into read>
+                                `reference_start`, <index into reference>
+                                `reference_end`,   <index into reference>
+                                `read_start`,  <index into read>
+                                `read_end`     <index into read>
 
         Raises
             ValueError
@@ -396,12 +396,12 @@ def forceAlign( read: STR_T,
         raise ValueError("No solution found")
     if force_overhang:
         # read must align to either the beginning or end of the reference string
-        if (res.target_begin != 0 or
-            res.target_end != len(reference) - 1):
+        if (res.reference_start != 0 or
+            res.reference_end != len(reference) - 1):
             raise ValueError("Read does not align to one overhang")
     return res
 # end def
 
 def printForceAlign(read: STR_T, reference: STR_T, alignment: Alignment):
     print(c_util._str(reference))
-    print(' '*(alignment.target_begin - alignment.query_begin) + c_util._str(read))
+    print(' '*(alignment.reference_start - alignment.read_start) + c_util._str(read))

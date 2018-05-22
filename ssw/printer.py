@@ -1,30 +1,47 @@
-def printer(res, ref, read):
+# -*- coding: utf-8 -*-
+from typing import Union
+
+from ssw import (
+    SSW,
+    Alignment
+)
+
+STR_T = Union[str, bytes]
+
+def printer(alignment: Alignment, reference: STR_T, read: STR_T):
     print("optimal_score: %d\tsub-optimal_score: %d\t" %
-        (res.optimal_score, res.sub_optimal_score))
-    target_begin = res.target_begin
-    if target_begin >= 0:
-        print("target_begin: %d\t" % (target_begin), end='')
-    print("target_end: %d\t" % (res.target_end) )
-    query_begin = res.query_begin
-    if query_begin >= 0:
-        print("query_begin: %d\t" % (query_begin), end='')
-    print("query_end: %d\n" % (res.query_end))
-    cigar = res.CIGAR
+        (alignment.optimal_score, alignment.sub_optimal_score))
+
+    reference_start: int = alignment.reference_start
+
+    if reference_start >= 0:
+        print("reference_start: %d\t" % (reference_start), end='')
+    print("reference_end: %d\t" % (alignment.reference_end) )
+
+    read_start: int = alignment.read_start
+
+    if read_start >= 0:
+        print("read_start: %d\t" % (read_start), end='')
+    print("read_end: %d\n" % (alignment.read_end))
+
+    cigar: str = alignment.CIGAR
 
     if cigar is not None:
-        e = 0
-        left = 0
-        pb = query_begin
-        qb = target_begin
-        STEP2 = False
-        STEP3 = False
-        STEPEND = False
-        lim = len(cigar)
+        e: int      = 0
+        left: int   = 0
+        pb: int = read_start
+        qb: int = reference_start
+        STEP2: bool = False
+        STEP3: bool = False
+        STEPEND: bool = False
+        lim: int = len(cigar)
+
         while e < lim or left > 0:
-            q = qb
-            p = pb
-            count = 0
-            print("Target: %8d    " % (q), end='')
+            q: int = qb
+            p: int = pb
+            count: int = 0
+
+            print("Refer:  %8d    " % (q), end='')
             for c in range(e, lim, 2):
                 length = int(cigar[c])
                 letter = cigar[c + 1]
@@ -33,7 +50,7 @@ def printer(res, ref, read):
                     if letter == 'I':
                         print("-", end='')
                     else:
-                        print(ref[q], end='')
+                        print(reference[q], end='')
                         q += 1
                     count += 1
                     if count == 60:
@@ -53,7 +70,7 @@ def printer(res, ref, read):
                 L1 = left if (count == 0 and left > 0) else length
                 for j in range(L1):
                     if letter == 'M':
-                        if ref[q] == read[p]:
+                        if reference[q] == read[p]:
                             print('|', end='')
                         else:
                             print("*", end='')
@@ -76,7 +93,7 @@ def printer(res, ref, read):
             # end for
             # STEP 3
             p = pb
-            print("\nQuery:  %8d    " % (p), end='')
+            print("\nRead:   %8d    " % (p), end='')
             count = 0
             for c in range(e, lim, 2):
                 length = int(cigar[c])
