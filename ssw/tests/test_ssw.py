@@ -4,17 +4,15 @@ import unittest
 try:
     from ssw import (
         SSW,
-        __version__,
-        force_align
+        force_align,
+        format_force_align
     )
 except:
-    import sys
-    from os.path import dirname
-    SSW_PATH = dirname(dirname(__file__))
-    sys.path.append(SSW_PATH)
+    import _setup
     from ssw import (
         SSW,
-        force_align
+        force_align,
+        format_force_align
     )
 
 class TestSSW(unittest.TestCase):
@@ -62,4 +60,4 @@ class TestSSW(unittest.TestCase):
         read = b"ACTG"
         ref = b"TTTTCTGCCCCCACG"
         res = force_align(read, ref)
-        # print_force_align(read, ref, res)
+        format_force_align(read, ref, res)

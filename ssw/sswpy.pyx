@@ -402,15 +402,17 @@ def force_align( read: STR_T,
     return res
 # end def
 
-def print_force_align(  read: STR_T,
+def format_force_align(  read: STR_T,
                         reference: STR_T,
-                        alignment: Alignment):
+                        alignment: Alignment,
+                        do_print: bool = False):
     '''Does not truncate strings
 
     Args:
         read:
         reference:
         alignment:
+        do_print: default is False
     '''
     start_ref: int = alignment.reference_start
     start_read: int = alignment.read_start
@@ -420,6 +422,10 @@ def print_force_align(  read: STR_T,
         buffer_ref = ' '*(start_read - start_ref)
     else:
         buffer_read = ' '*(start_ref - start_read)
-    print(buffer_ref + c_util._str(reference))
-    print(buffer_read + c_util._str(read))
+    ref_out = buffer_ref + c_util._str(reference)
+    read_out = buffer_read + c_util._str(read)
+    if do_print:
+        print(ref_out)
+        print(read_out)
+    return ref_out, read_out
 # end def
