@@ -18,9 +18,11 @@ Note: When SSW open a gap, the gap open penalty alone is applied.
 
 ## Installation
 
+from [PyPi](https://pypi.org/project/ssw-py/)
+
     pip install ssw-py
 
 
-or
+or from source
 
     python setup.py install

@@ -412,6 +412,14 @@ def print_force_align(  read: STR_T,
         reference:
         alignment:
     '''
-    print(c_util._str(reference))
-    print(' '*(alignment.reference_start - alignment.read_start) + c_util._str(read))
+    start_ref: int = alignment.reference_start
+    start_read: int = alignment.read_start
+    buffer_ref: str = ''
+    buffer_read: str = ''
+    if start_ref < start_read:
+        buffer_ref = ' '*(start_read - start_ref)
+    else:
+        buffer_read = ' '*(start_ref - start_read)
+    print(buffer_ref + c_util._str(reference))
+    print(buffer_read + c_util._str(read))
 # end def
