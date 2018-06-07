@@ -43,24 +43,27 @@ rpath = os.path.relpath
 
 PACKAGE_PATH =      os.path.abspath(os.path.dirname(__file__))
 MODULE_PATH =       pjoin(PACKAGE_PATH, 'ssw')
+LIB_PATH =          pjoin(MODULE_PATH, 'lib')
 
-common_include = ['lib/CSSWL/src', 'lib']
+common_include = ['ssw/lib/CSSWL/src', 'ssw/lib']
 
 if sys.platform == 'win32':
     extra_compile_args = ['']
 else:
     extra_compile_args = ['-Wno-unused-function']
 
-# fasta dataset files to include in installation
-# ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
-#                  os.walk(DATASETS_PATH) for f in files if '.fa' in f]
-ssw_files = []
+# source files to include in installation for tar.gz
+ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
+                 os.walk(LIB_PATH) for f in files if (
+                    ('.h' in f) or ('.c' in f) or ('.cpp' in f)
+                )
+]
 
 ssw_ext = Extension(
     'ssw.sswpy',
     sources=['ssw/sswpy.pyx',
-             'lib/CSSWL/src/ssw.c',
-             'lib/str_util.c'],
+             'ssw/lib/CSSWL/src/ssw.c',
+             'ssw/lib/str_util.c'],
     include_dirs=common_include + [numpy.get_include()],
     extra_compile_args=extra_compile_args
 )
