@@ -1,0 +1,10 @@
+[project]
+name = "ssw-py"
+
+[build-system]
+requires = [
+    "setuptools<65.6.0",
+    "wheel",
+    "cython",
+    "numpy",
+]
