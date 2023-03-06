@@ -1,29 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-test with:
-    python setup.py build_ext --inplace
+=========================================================================
+ssw-py: SIMD Smith-Waterman Python Module for Use in Genomic Applications
+=========================================================================
 
-build wheels with:
-    python setup.py bdist_wheel --plat-name win_amd64 --python-tag cp36
-    python setup.py bdist_wheel --plat-name macosx_10_10_x86_64 --python-tag cp36
-    python setup.py sdist --formats=gztar
-    twine upload dist/*
+Installation
+------------
+
+**ssw-py** has no external runtime library dependencies and should compile
+on easily most Linux and MacOS systems
 
 https://pypi.python.org/pypi/ssw-py
-'''
-DESCRIPTION = ("Complete Striped Smith-Waterman Library for Python")
-LONG_DESCRIPTION = '''
-**ssw-py** is a Python package
-Cythonized wrapped version of:
 
-https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library
+To build **ssw-py** within the package directory run::
 
-Original C library authors and paper should be cited if used.
+  $ python setup.py build_ext --inplace
 
-Support for Python 3 at the moment
+If you would like to install ssw-py in your local Python environment
+you may do so using either pip or the setup.py script::
 
-License is MIT
+  $ pip install ssw-py
+            or
+  $ python setup.py install
+
+Create wheels with wheel installed and tar.gz::
+
+  $ python setup.py bdist_wheel
+  $ python setup.py sdist --formats=gztar
+
+upload wheels with:
+    twine upload dist/*
+
 '''
 
 try:
@@ -31,84 +39,98 @@ try:
 except ImportError:
     from distutils.core import setup, Extension
 
-import numpy.distutils.misc_util
 import os
+import os.path as op
 import sys
-import shutil
-import re
-import ast
 
-pjoin = os.path.join
-rpath = os.path.relpath
+PACKAGE_PATH =      op.abspath(op.dirname(__file__))
+MODULE_PATH =       op.join(PACKAGE_PATH, 'ssw')
+LIB_PATH =          op.join(MODULE_PATH, 'lib')
 
-PACKAGE_PATH =      os.path.abspath(os.path.dirname(__file__))
-MODULE_PATH =       pjoin(PACKAGE_PATH, 'ssw')
-LIB_PATH =          pjoin(MODULE_PATH, 'lib')
-
-common_include = ['ssw/lib/CSSWL/src', 'ssw/lib']
+COMMON_INCLUDE = ['ssw/lib/CSSWL/src', 'ssw/lib']
 
 if sys.platform == 'win32':
-    extra_compile_args = ['']
+    EXTRA_COMPILE_ARGS = ['']
 else:
-    extra_compile_args = ['-Wno-unused-function']
+    EXTRA_COMPILE_ARGS = [
+        '-Wno-error=declaration-after-statement',
+        '-Wno-unused-function',
+    ]
 
 # source files to include in installation for tar.gz
-ssw_files = [rpath(pjoin(root, f), MODULE_PATH) for root, _, files in
-                 os.walk(LIB_PATH) for f in files if (
-                    ('.h' in f) or ('.c' in f) or ('.cpp' in f)
-                )
+SSW_FILES = [
+    op.relpath(op.join(_root, _f), MODULE_PATH) 
+    for _root, _, _files in os.walk(LIB_PATH) 
+    for _f in _files 
+    if (
+        ('.h' in _f) or ('.c' in _f) or ('.cpp' in _f)
+    )
 ]
 
 ssw_ext = Extension(
     'ssw.sswpy',
-    sources=['ssw/sswpy.pyx',
-             'ssw/lib/CSSWL/src/ssw.c',
-             'ssw/lib/str_util.c'],
-    include_dirs=common_include + [numpy.get_include()],
-    extra_compile_args=extra_compile_args
+    sources=[
+        'ssw/sswpy.pyx',
+        'ssw/lib/CSSWL/src/ssw.c',
+        'ssw/lib/str_util.c'
+    ],
+    include_dirs=COMMON_INCLUDE,
+    extra_compile_args=EXTRA_COMPILE_ARGS
 )
 
 # Initialize subtree with
 # git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
 
-# Begin modified code from Flask's version getter
-# BSD license
-# Copyright (c) 2015 by Armin Ronacher and contributors.
-# https://github.com/pallets/flask
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
 
-with open('ssw/__init__.py', 'rb') as initfile:
-    VERSION = str(ast.literal_eval(_version_re.search(
-                                   initfile.read().decode('utf-8')).group(1)))
-
-DISTNAME = 'ssw-py'
-LICENSE = 'MIT'
-AUTHORS = "Nick Conway"
-EMAIL = "nick.conway@wyss.harvard.edu"
 CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Environment :: Console',
     'Intended Audience :: Science/Research',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Cython',
     'Topic :: Scientific/Engineering',
 ]
 
+import ssw
+
+with open('README.md') as fd:
+    LONG_DESCRIPTION = fd.read()
+
+def try_cythonize(extension_list, *args, **kwargs):
+    '''
+    Light cythonize wrapper
+    '''
+    try:
+        from Cython.Build import cythonize
+    except (ImportError, ModuleNotFoundError):
+        def cythonize(x, **kwargs):
+            return x
+
+    cython_compiler_directives = dict(
+        language_level='3',
+        c_string_encoding='utf-8',
+    )
+
+    return cythonize(
+        extension_list,
+        compiler_directives=cython_compiler_directives,
+    )
+
+
 setup(
-    name=DISTNAME,
-    version=VERSION,
-    author=AUTHORS,
-    author_email=EMAIL,
+    name='ssw-py',
+    version=ssw.__version__,
+    author=ssw.__author__,
+    author_email='a.grinner@gmail.com',
     url='https://github.com/Wyss/ssw-py',
     packages=['ssw'],
-    ext_modules=[ssw_ext],
-    include_dirs=numpy.distutils.misc_util.get_numpy_include_dirs(),
-    package_data={'ssw': ssw_files},
-    description=DESCRIPTION,
+    ext_modules=try_cythonize([ssw_ext]),
+    package_data={'ssw': SSW_FILES},
+    description=ssw.DESCRIPTION,
     long_description=LONG_DESCRIPTION,
-    license=LICENSE,
+    license=ssw.__license__,
     classifiers=CLASSIFIERS,
+    setup_requires=['Cython', 'setuptools>=65.6.3'],
     zip_safe=False
 )

@@ -6,3 +6,6 @@ sswpy.c
 build/
 dist/
 *.pyd
+
+.vscode/
+.eggs/
