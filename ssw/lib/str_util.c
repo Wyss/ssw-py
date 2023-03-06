@@ -1,7 +1,15 @@
-
+/*
+* Copyright 2023 Nick Conway; Copyright 2018, Nick Conway; Wyss Institute
+* Harvard University
+*
+* lib/str_util.c
+*
+* Utilities for assisting DNA C-string to integer conversion
+* and CIGAR format IO
+*/
 #include "str_util.h"
-#include <Python.h>
 #include <stdio.h>
+
 
 static const int8_t DNA_BASE_LUT[128] = {
     4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4,
@@ -18,7 +26,11 @@ static const int8_t DNA_BASE_LUT[128] = {
     4, 4, 4, 4,  3, 0, 4, 4,  4, 4, 4, 4,  4, 4, 4, 4
 };
 
-void dnaToInt8(const char* c_str, int8_t* arr, uint32_t len) {
+void dna_to_int8(
+    const char* c_str,
+    int8_t* arr,
+    uint32_t len
+) {
     /* Assume ascii */
     const char* str_lim  = c_str + len;
     while(c_str < str_lim) {
@@ -42,14 +54,25 @@ void ssw_write_cigar(const s_align* a) {
 }
 
 //  Print the BLAST like output.
-void ssw_writer(const s_align* a,
-      const char* ref_seq,
-      const char* read_seq) {
+void ssw_writer(
+        const s_align* a,
+        const char* ref_seq,
+        const char* read_seq
+) {
 
     const int8_t* table = DNA_BASE_LUT;
-    fprintf(stdout, "optimal_score: %d\tsub-optimal_score: %d\t\n", a->score1, a->score2);
+    fprintf(
+        stdout,
+        "optimal_score: %d\tsub-optimal_score: %d\t\n",
+        a->score1,
+        a->score2
+    );
     if (a->ref_begin1 >= 0) {
-        fprintf(stdout, "target_begin: %d\t", a->ref_begin1);
+        fprintf(
+            stdout,
+            "target_begin: %d\t",
+            a->ref_begin1
+        );
     }
     fprintf(stdout, "target_end: %d\t\n", a->ref_end1);
     if (a->read_begin1 >= 0) {
@@ -100,7 +123,7 @@ step2:
                         ++p;
                     } else {
                       fprintf(stdout, "*");
-                      if (letter == 'I') { 
+                      if (letter == 'I') {
                           ++p;
                       } else {
                           ++q;

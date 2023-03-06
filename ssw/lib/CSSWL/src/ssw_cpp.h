@@ -131,8 +131,8 @@ class Aligner {
   // @param    query     The query sequence.
   // @param    filter    The filter for the alignment.
   // @param    alignment The container contains the result.
-  // @param    maskLen   The distance between the optimal and suboptimal alignment ending position will >= maskLen. We suggest to 
-  //                     use readLen/2, if you don't have special concerns. Note: maskLen has to be >= 15, otherwise this function 
+  // @param    maskLen   The distance between the optimal and suboptimal alignment ending position will >= maskLen. We suggest to
+  //                     use readLen/2, if you don't have special concerns. Note: maskLen has to be >= 15, otherwise this function
   //                     will NOT return the suboptimal alignment information.
   // @return   True: succeed; false: fail.
   // =========
@@ -148,8 +148,8 @@ class Aligner {
   // @param    ref_len   The length of the reference sequence.
   // @param    filter    The filter for the alignment.
   // @param    alignment The container contains the result.
-  // @param    maskLen   The distance between the optimal and suboptimal alignment ending position will >= maskLen. We suggest to 
-  //                     use readLen/2, if you don't have special concerns. Note: maskLen has to be >= 15, otherwise this function 
+  // @param    maskLen   The distance between the optimal and suboptimal alignment ending position will >= maskLen. We suggest to
+  //                     use readLen/2, if you don't have special concerns. Note: maskLen has to be >= 15, otherwise this function
   //                     will NOT return the suboptimal alignment information.
   // @return   True: succeed; false: fail.
   // =========

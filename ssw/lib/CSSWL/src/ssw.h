@@ -18,7 +18,7 @@
 /* NOTE: Added if C macro for ssw-py arm64 compatibiltiy */
 #if defined(__ARM_ARCH_ISA_A64) || defined(__aarch64__)
 #include <sse2neon.h>
-#else 
+#else
 #include <emmintrin.h>
 #endif
 
@@ -158,7 +158,7 @@ int32_t mark_mismatch (int32_t ref_begin1,
 					   const int8_t* ref,
 					   const int8_t* read,
 					   int32_t readLen,
-					   uint32_t** cigar, 
+					   uint32_t** cigar,
 					   int32_t* cigarLen);
 
 /*!	@function		Produce CIGAR 32-bit unsigned integer from CIGAR operation and CIGAR length

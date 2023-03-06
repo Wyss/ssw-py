@@ -10,17 +10,17 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-Author:  
-C implementation: Mengyao Zhao  
-C++ wrapper: Wan-Ping Lee  
-Python wrapper: Yongan Zhao  
+Author:
+C implementation: Mengyao Zhao
+C++ wrapper: Wan-Ping Lee
+Python wrapper: Yongan Zhao
 Java wrapper: Daniel Cameron
 
-Contact:  
-Mengyao Zhao <zhaomengyao@gmail.com>  
-Wan-Ping Lee <wanping.lee@gmail.com>  
-Yongan Zhao <zhaoyanswill@gmail.com>   
-Daniel Cameron <cameron.d@wehi.edu.au>  
+Contact:
+Mengyao Zhao <zhaomengyao@gmail.com>
+Wan-Ping Lee <wanping.lee@gmail.com>
+Yongan Zhao <zhaoyanswill@gmail.com>
+Daniel Cameron <cameron.d@wehi.edu.au>
 
 Last revision: 06/29/2016
 
@@ -43,7 +43,7 @@ To use the C style API, please:
 2. Write #include "ssw.h" into your file that will call the API functions.
 3. The API files are ready to be compiled together with your own C/C++ files.
 
-The API function descriptions are in the file ssw.h. One simple example of the API usage is example.c. The Smith-Waterman penalties need to be integers. Small penalty numbers such as: match: 2, mismatch: -1, gap open (the total penalty when one gap is opened): -3, gap extension: -1 are recommended, which will lead to shorter running time.  
+The API function descriptions are in the file ssw.h. One simple example of the API usage is example.c. The Smith-Waterman penalties need to be integers. Small penalty numbers such as: match: 2, mismatch: -1, gap open (the total penalty when one gap is opened): -3, gap extension: -1 are recommended, which will lead to shorter running time.
 
 To use the C++ style API, please:
 
@@ -54,17 +54,17 @@ To use the C++ style API, please:
 The API function descriptions are in the file ssw_cpp.h. A simple example of using the C++ API is example.cpp.
 
 ###Speed and memory usage of the API
-Test data set: 
+Test data set:
 Target sequence: reference genome of E. coli strain 536 (4,938,920 nucleotides) from NCBI
 Query sequences: 1000 reads of Ion Torrent sequenced E. coli strain DH10B (C23-140, 318 PGM Run, 11/2011), read length: ~25-540 bp, most reads are ~200 bp
 
 CPU time:
 
 * AMD CPU: default penalties: ~880 seconds; -m1 -x3 -o5 -e2: ~460 seconds
-* Intel CPU: default penalties: ~960 seconds; -m1 -x3 -o5 -e2: ~500 seconds 
+* Intel CPU: default penalties: ~960 seconds; -m1 -x3 -o5 -e2: ~500 seconds
 
 Memory usage: ~40MB
- 
+
 ###Install the software
 
 1. Download the software from https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library.
@@ -93,7 +93,7 @@ Options:
 The input files can be in FASTA or FASTQ format. Both target and query files can contain multiple sequences. Each sequence in the query file will be aligned with all sequences in the target file. If your target file has N sequences and your query file has M sequences, the results will have M*N alignments.
 
 ###Software output
-The software can output SAM format or BLAST like format results. 
+The software can output SAM format or BLAST like format results.
 
 1. SAM format output:
 
@@ -143,7 +143,7 @@ ssw_lib.py is a Python wrapper that fully supports APIs of the C library. To use
 
 To use the python wrapper, please:
 
-1. Compile the src folder by either using the makefile or by compiling a dynamic shared library with gcc  
+1. Compile the src folder by either using the makefile or by compiling a dynamic shared library with gcc
 ```gcc -Wall -O3 -pipe -fPIC -shared -rdynamic -o libssw.so ssw.c ssw.h```
 2. Put libssw.so and ssw_lib.py in the same directory of your own program files or directories in sys.paths.
 3. The LD_LIBRARY_PATH environment variable may need to be modified to include the directory of the dynamic library libssw.so by one of the two following mathods:
@@ -152,7 +152,7 @@ To use the python wrapper, please:
 4. In a python script or in a interactive interpreter, import the CSsw class by: ```from ssw_lib import CSsw``` or ```import ssw_lib``` and then call ```ssw_lib.CSsw```
 5. Call APIs with input parameters and parse the results (Please see pyssw.py as an example).
 
-###Run pyssw standalone 
+###Run pyssw standalone
 ```
 usage: pyssw.py [-h] [-l SLIBPATH] [-m NMATCH] [-x NMISMATCH] [-o NOPEN]
                 [-e NEXT] [-p] [-a SMATRIX] [-c] [-f NTHR] [-r] [-s] [-header]
@@ -195,12 +195,12 @@ optional arguments:
 
 ###pyssw output
 
-The software can output SAM format or BLAST like format results. 
+The software can output SAM format or BLAST like format results.
 
 ###Speed and memory usage of pyssw
 
 The speed and memory are about the same as the c library.
-	
+
 ##Java interface
 
 The java wrapper is a thin JNI (Java Native Interface) wrapper around the native C implementation.

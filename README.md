@@ -17,9 +17,9 @@ heuristically.
 Note: When SSW opens a gap, the gap open penalty alone is applied.
 
 ## ssw-py specific updates
-`sse2neon.h` from the amazing https://github.com/DLTcollab/sse2neon project
-was used to enable builds on arm 64 targets as a conditional macro target if
-`__ARM_ARCH_ISA_A64` is defined
+`sse2neon.h` from the https://github.com/DLTcollab/sse2neon project
+was used to enable builds on arm64 targets as a conditional macro target if
+`__ARM_ARCH_ISA_A64` or `__aarch64__` is defined
 
 ## Installation
 
