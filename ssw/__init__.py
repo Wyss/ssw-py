@@ -13,7 +13,7 @@ __copyright__ = (
     'Harvard University'
 )
 __license__ = 'MIT'
-__version__ = '1.0.0a1'
+__version__ = '1.0.0a2'
 DESCRIPTION = (
     'Python bindings for Complete-Striped-Smith-Waterman-Library '
     '(SSW) project'
@@ -22,6 +22,8 @@ DESCRIPTION = (
 
 # `try` block here allows __version__, etc to be available prior to
 # Cython extension building
+from .alignment import Alignment
+
 try:
     from .alignmentmgr import (  # type: ignore
         AlignmentMgr,

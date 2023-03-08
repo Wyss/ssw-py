@@ -1,0 +1,21 @@
+# Changelog
+
+## Version 1.0.0 (March 11, 2023)
+- Support for Python 3.8 through 3.11
+- [pre-commit](https://pre-commit.com) added to repo and code sanitized
+- GitHub Action automated testing with `pytest`
+- GitHub Action based wheel for PyPi support following the CPython EOL model. See https://devguide.python.org/versions/
+- documentation added using [Sphinx](https://www.sphinx-doc.org/en/master/index.html) and [MyST](https://myst-parser.readthedocs.io/en/latest/) Markdown
+- Documentation build on version tag using GitHub action in `update-docs.yml`
+- docstrings updated
+- Updated `LICENSE.md` copyright for 2023
+- `README.md` updated to add information regarding `sse2neon.h` macro for arm64 support
+- Project url updated in `setup.py`.
+- Made paths platform independent in `setup.py`
+- removed SSW Library java and demo data files for clarity since they are unused. Updated `Makefile` to remove java build
+- Code updated with warnings for deprecated camelCase methods for snake_case migration.
+- Test coverage added for deprecation warnings
+- Tests updated to check `Alignment` named tuples
+- `ssw-py-ci-github-action.yml` github action workflow added
+- `sswpy.pyx` renamed to `alignmentmgr.pyx` and `SSW` class is now `AlignmentMgr`.
+- `ssw/__init__.py` aliases `AlignmentMgr` to `SSW` for deprecated support
