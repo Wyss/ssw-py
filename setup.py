@@ -35,17 +35,23 @@ upload wheels with:
 '''
 
 try:
-    from setuptools import setup, Extension
+    from setuptools import (
+        Extension,
+        setup,
+    )
 except ImportError:
-    from distutils.core import setup, Extension
+    from distutils.core import (
+        setup,
+        Extension,
+    )
 
 import os
 import os.path as op
 import sys
 
-PACKAGE_PATH =      op.abspath(op.dirname(__file__))
-MODULE_PATH =       op.join(PACKAGE_PATH, 'ssw')
-LIB_PATH =          op.join(MODULE_PATH, 'lib')
+PACKAGE_PATH = op.abspath(op.dirname(__file__))
+MODULE_PATH = op.join(PACKAGE_PATH, 'ssw')
+LIB_PATH = op.join(MODULE_PATH, 'lib')
 
 COMMON_INCLUDE = ['ssw/lib/CSSWL/src', 'ssw/lib']
 
@@ -59,27 +65,24 @@ else:
 
 # source files to include in installation for tar.gz
 SSW_FILES = [
-    op.relpath(op.join(_root, _f), MODULE_PATH) 
-    for _root, _, _files in os.walk(LIB_PATH) 
-    for _f in _files 
+    op.relpath(op.join(_root, _f), MODULE_PATH)
+    for _root, _, _files in os.walk(LIB_PATH)
+    for _f in _files
     if (
         ('.h' in _f) or ('.c' in _f) or ('.cpp' in _f)
     )
 ]
 
-ssw_ext = Extension(
-    'ssw.sswpy',
+ALIGNMENTMGR_EXT = Extension(
+    'ssw.alignmentmgr',
     sources=[
-        'ssw/sswpy.pyx',
-        'ssw/lib/CSSWL/src/ssw.c',
-        'ssw/lib/str_util.c'
+        op.join('ssw', 'alignmentmgr.pyx'),
+        op.join('ssw', 'lib', 'CSSWL', 'src', 'ssw.c'),
+        op.join('ssw', 'lib', 'str_util.c'),
     ],
     include_dirs=COMMON_INCLUDE,
-    extra_compile_args=EXTRA_COMPILE_ARGS
+    extra_compile_args=EXTRA_COMPILE_ARGS,
 )
-
-# Initialize subtree with
-# git subtree add --prefix=lib/CSSWL git@github.com:mengyao/Complete-Striped-Smith-Waterman-Library.git master
 
 
 CLASSIFIERS = [
@@ -92,10 +95,10 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering',
 ]
 
-import ssw
 
 with open('README.md') as fd:
     LONG_DESCRIPTION = fd.read()
+
 
 def try_cythonize(extension_list, *args, **kwargs):
     '''
@@ -110,6 +113,8 @@ def try_cythonize(extension_list, *args, **kwargs):
     cython_compiler_directives = dict(
         language_level='3',
         c_string_encoding='utf-8',
+        # embedsignature=True,
+        binding=True,
     )
 
     return cythonize(
@@ -118,19 +123,21 @@ def try_cythonize(extension_list, *args, **kwargs):
     )
 
 
+import ssw
+
 setup(
     name='ssw-py',
     version=ssw.__version__,
     author=ssw.__author__,
     author_email='a.grinner@gmail.com',
-    url='https://github.com/Wyss/ssw-py',
+    url='https://github.com/libnano/ssw-py',
     packages=['ssw'],
-    ext_modules=try_cythonize([ssw_ext]),
+    ext_modules=try_cythonize([ALIGNMENTMGR_EXT]),
     package_data={'ssw': SSW_FILES},
     description=ssw.DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license=ssw.__license__,
     classifiers=CLASSIFIERS,
     setup_requires=['Cython', 'setuptools>=65.6.3'],
-    zip_safe=False
+    zip_safe=False,
 )

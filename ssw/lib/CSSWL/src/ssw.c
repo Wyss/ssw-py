@@ -93,7 +93,7 @@ struct _profile{
 	uint8_t bias;
 };
 
-/* array index is an ASCII character value from a CIGAR, 
+/* array index is an ASCII character value from a CIGAR,
    element value is the corresponding integer opcode between 0 and 8 */
 const uint8_t encoded_ops[] = {
 	0,         0,         0,         0,
@@ -920,14 +920,14 @@ uint32_t* store_previous_m (int8_t choice,	// 0: current not M, 1: current match
 					   uint32_t* new_cigar) {
 
 	if ((*length_m) && (choice == 2 || !choice)) {
-		new_cigar = add_cigar (new_cigar, p, s, (*length_m), '='); 
+		new_cigar = add_cigar (new_cigar, p, s, (*length_m), '=');
 		(*length_m) = 0;
-	} else if ((*length_x) && (choice == 1 || !choice)) { 
-		new_cigar = add_cigar (new_cigar, p, s, (*length_x), 'X'); 
+	} else if ((*length_x) && (choice == 1 || !choice)) {
+		new_cigar = add_cigar (new_cigar, p, s, (*length_x), 'X');
 		(*length_x) = 0;
 	}
 	return new_cigar;
-}				
+}
 
 /*! @function:
      1. Calculate the number of mismatches.
@@ -961,11 +961,11 @@ int32_t mark_mismatch (int32_t ref_begin1,
 				if (*ref != *read) {
 					++ mismatch_length;
 					// the previous is match; however the current one is mismatche
-					new_cigar = store_previous_m (2, &length_m, &length_x, &p, &s, new_cigar);			
+					new_cigar = store_previous_m (2, &length_m, &length_x, &p, &s, new_cigar);
 					++ length_x;
 				} else {
 					// the previous is mismatch; however the current one is matche
-					new_cigar = store_previous_m (1, &length_m, &length_x, &p, &s, new_cigar);			
+					new_cigar = store_previous_m (1, &length_m, &length_x, &p, &s, new_cigar);
 					++ length_m;
 				}
 				++ ref;
@@ -974,23 +974,22 @@ int32_t mark_mismatch (int32_t ref_begin1,
 		}else if (op == 'I') {
 			read += length;
 			mismatch_length += length;
-			new_cigar = store_previous_m (0, &length_m, &length_x, &p, &s, new_cigar);			
-			new_cigar = add_cigar (new_cigar, &p, &s, length, 'I'); 
+			new_cigar = store_previous_m (0, &length_m, &length_x, &p, &s, new_cigar);
+			new_cigar = add_cigar (new_cigar, &p, &s, length, 'I');
 		}else if (op == 'D') {
 			ref += length;
 			mismatch_length += length;
-			new_cigar = store_previous_m (0, &length_m, &length_x, &p, &s, new_cigar);			
-			new_cigar = add_cigar (new_cigar, &p, &s, length, 'D'); 
+			new_cigar = store_previous_m (0, &length_m, &length_x, &p, &s, new_cigar);
+			new_cigar = add_cigar (new_cigar, &p, &s, length, 'D');
 		}
 	}
 	new_cigar = store_previous_m (0, &length_m, &length_x, &p, &s, new_cigar);
-	
+
 	length = readLen - read_end1 - 1;
 	if (length > 0) new_cigar = add_cigar(new_cigar, &p, &s, length, 'S');
-	
-	(*cigarLen) = p;	
+
+	(*cigarLen) = p;
 	free(*cigar);
 	(*cigar) = new_cigar;
 	return mismatch_length;
 }
-
