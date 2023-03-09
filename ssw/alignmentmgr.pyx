@@ -12,6 +12,10 @@ Alignment Manager Cython wrapper for ssw library code.
 NOTE: See this link for a info on the CIGAR format:
 `What is a CIGAR? <http://genome.sph.umich.edu/wiki/SAM#What_is_a_CIGAR.3F>`_
 
+Refer to
+`Wiki Smith–Waterman_algorithm <https://en.wikipedia.org/wiki/Smith–Waterman_algorithm>`_
+to understand Smith-Waterman scoring
+
 '''
 from cpython.bytes cimport (
     PyBytes_AsStringAndSize,
@@ -57,17 +61,24 @@ cdef extern from "ssw.h":
         uint32_t* cigar
         int32_t cigarLen
 
-    s_profile* ssw_init(const int8_t*, const int32_t, const int8_t*, const int32_t, const int8_t)
-    void init_destroy (s_profile*)
-    s_align* ssw_align (const s_profile*, const int8_t*, int32_t, const uint8_t, const uint8_t, const uint8_t, const uint16_t, const int32_t, const int32_t)
-    void align_destroy (s_align*)
-    char cigar_int_to_op (uint32_t)
+    s_profile* ssw_init(
+        const int8_t*, const int32_t,
+        const int8_t*, const int32_t,
+        const int8_t)
+    void init_destroy(s_profile*)
+    s_align* ssw_align(
+        const s_profile*, const int8_t*, int32_t, const uint8_t,
+        const uint8_t, const uint8_t,
+        const uint16_t, const int32_t, const int32_t)
+    void align_destroy(s_align*)
+    char cigar_int_to_op(uint32_t)
     uint32_t cigar_int_to_len(uint32_t)
     uint32_t to_cigar_int(uint32_t, char)
 
 
 import warnings as pywarnings
 from typing import (
+    List,
     Optional,
     Tuple,
     Union,
@@ -121,13 +132,17 @@ cdef class AlignmentMgr:
         s_profile* profile
         int8_t* read_arr
         Py_ssize_t read_length
+        int32_t num_elements_sq_root
 
         int8_t* ref_arr
         Py_ssize_t ref_length
 
+
     cdef:
         object read       # type: STR_T
         object reference  # type: STR_T
+        readonly int _match_score
+        readonly int _mismatch_penalty
 
     def __cinit__(
             self,
@@ -148,16 +163,23 @@ cdef class AlignmentMgr:
         '''Class initialization method
 
         Args:
-            match_score: for scoring matches
-            mismatch_penalty: for scoring mismatches
+            match_score: 0 to 255 value for scoring matches
+            mismatch_penalty: 0 to 255 value or scoring mismatches
 
         '''
+        # Hard coded to a 5 x 5 matrix
         self.score_matrix = <int8_t*> PyMem_Malloc(25 * sizeof(int8_t))
-        self.build_dna_score_matrix(
-            <uint8_t>match_score,
-            <uint8_t> mismatch_penalty,
-            self.score_matrix,
-        )
+
+        # the square root of the number of elements in `self.score_matrix`
+        # (``self.score_matrix`` has
+        # ``num_elements_sq_root*num_elements_sq_root`` elements)
+        self.num_elements_sq_root = 5
+
+        self.match_score = match_score
+        self.mismatch_penalty = mismatch_penalty
+
+        self.build_dna_score_matrix()
+
         self.read = None
         self.reference = None
     # end def
@@ -175,6 +197,44 @@ cdef class AlignmentMgr:
         if self.ref_arr != NULL:
             PyMem_Free(self.ref_arr)
     # end def
+
+    @property
+    def match_score(self) -> int:
+        '''0 to 255 value for scoring matches
+
+        '''
+        return self._match_score
+
+    @match_score.setter
+    def match_score(self, value: int):
+        '''Set the :attr:`match_score` attribute
+        Must be in range 0 to 255
+
+        Raises:
+            ValueError: Must be in range(0, 255)
+        '''
+        if value > 255 or value < 0:
+            raise ValueError(f'{value} must be in range(0, 255)')
+        self._match_score = value
+
+    @property
+    def mismatch_penalty(self) -> int:
+        '''0 to 255 penalty value for scoring mismatches
+
+        '''
+        return self._mismatch_penalty
+
+    @mismatch_penalty.setter
+    def mismatch_penalty(self, value: int):
+        '''Set the :attr:`mismatch_penalty` attribute
+        Must be in range 0 to 255
+
+        Raises:
+            ValueError: Must be in range(0, 255)
+        '''
+        if value > 255 or value < 0:
+            raise ValueError(f'{value} must be in range(0, 255)')
+        self._mismatch_penalty = value
 
     cdef int print_result_c(
             self,
@@ -199,7 +259,7 @@ cdef class AlignmentMgr:
             Py_ssize_t read_length, ref_length
             const char* ref_cstr = NULL
 
-        print(self.read)
+
         if result != NULL:
             read_cstr = obj_to_cstr_len(self.read, &read_length)
             ref_cstr = obj_to_cstr_len(self.reference, &ref_length)
@@ -220,8 +280,8 @@ cdef class AlignmentMgr:
         so as to be able to call ssw terminal print functions
 
         Args:
-            result: :class:`ssw.alignment.Alignment` containing the result from a
-                call to :meth:`align`
+            result: :class:`ssw.alignment.Alignment` containing the result from
+                a call to :meth:`align`
             start_idx: index to start printing from. defaults to 0
 
         Raises:
@@ -285,7 +345,7 @@ cdef class AlignmentMgr:
 
         Args:
             read: String-like (str or bytestring) that represents the read.
-                Must be set for a prpoer run
+                Must be set for a call to :meth:`align`
 
         '''
         cdef:
@@ -297,6 +357,13 @@ cdef class AlignmentMgr:
             int8_t* read_arr = <int8_t*> PyMem_Malloc(
                 read_length * sizeof(char)
             )
+
+            # ``score_size`` is the estimated Smith-Waterman score; if your
+            # estimated best alignment score is surely < 255 please set 0;
+            # if your estimated best alignment score >= 255, please set 1; if
+            # you don't know, please
+            # set 2
+            int8_t score_size = 2  # Don't know best score size
 
         if self.profile != NULL:
             init_destroy(self.profile)
@@ -319,8 +386,8 @@ cdef class AlignmentMgr:
             read_arr,
             <int32_t> read_length,
             self.score_matrix,
-            5,
-            2, # don't know best score size
+            self.num_elements_sq_root,
+            score_size,
         )
     # end def
 
@@ -332,11 +399,11 @@ cdef class AlignmentMgr:
         self.set_read(read)
 
     def set_reference(self, reference: STR_T):
-        '''Set the query reference string
+        '''Set the query reference string.
 
         Args:
             reference: String-like (str or bytestring) that represents the
-                reference sequence must be set
+                reference sequence. Must be set a call to :meth:`align`
 
         '''
         cdef:
@@ -375,10 +442,11 @@ cdef class AlignmentMgr:
         '''C version of the alignment code
 
         Args:
-            gap_open:
-            gap_extension:
-            start_idx:
-            mod_ref_length:
+            gap_open: The absolute value of gap open penalty
+            gap_extension: The absolute value of gap extension penalty
+            start_idx: The start index of the reference array to begin the s
+                rearch
+            mod_ref_length: Length of the target sequence
 
         Returns:
             ``s_align`` pointer results
@@ -395,8 +463,49 @@ cdef class AlignmentMgr:
                 &read_length,
             )
             s_align* result = NULL
+
+            # Should be read_length divided by 2
             int32_t mask_len = read_length // 2
 
+            # ``bitwise_flag`` (from high to low)
+            #
+            # bit 5: when set as 1, ``ssw_align`` will return the best alignment
+            #     beginning position;
+            # bit 6: when set as 1,
+            #     if (
+            #         ((reference_end - reference_start) < distance_filter) &&
+            #         ((read_end - read_start) < distance_filter)
+            #     )
+            #
+            #     (whatever bit 5 is setted) the function will return the best
+            #     alignment beginning position and cigar;
+            #
+            # bit 7: when set as 1, if the best `alignment_score >= score_filters`,
+            #     (whatever bit 5 is setted) the function will return the best
+            #     alignment beginning position and cigar;
+            #     NOTE: this is setting `bitwise_flag = 2`
+            #
+            # bit 8: when set as 1, (whatever bit 5, 6 or 7 is setted) the
+            #     function will always return the best alignment beginning
+            #     position and cigar.
+            #
+            #     NOTE: this is setting `bitwise_flag = 1`
+            #
+            # When flag == 0, only the optimal and sub-optimal scores and the
+            # optimal alignment ending position will be returned.
+            uint8_t bitwise_flag = 1
+
+            #`score_filters`: when bit 7 of flag is setted as 1 and bit 8 is
+            # set as 0, `score_filters` will be used (Please check the
+ 			# decription of the flag parameter for detailed usage.)
+            uint16_t score_filters = 0
+
+            #`distance_filter`: when bit 6 of flag is setted as 1 and bit 8 is
+            # set as 0, `distance_filter` will be used (Please check the
+            # decription of the flag parameter for detailed usage.)
+            uint16_t distance_filter = 0
+
+        # Guard the ``mask_len`` parameter
         mask_len = 15 if mask_len < 15 else mask_len
 
         if self.profile != NULL:
@@ -406,9 +515,9 @@ cdef class AlignmentMgr:
                 mod_ref_length,
                 gap_open,
                 gap_extension,
-                1,
-                0,
-                0,
+                bitwise_flag,
+                score_filters,
+                distance_filter,
                 mask_len,
             )
         else:
@@ -427,24 +536,23 @@ cdef class AlignmentMgr:
     ) -> Alignment:
         '''Align a read to the reference with optional index offseting
 
-        returns a dictionary no matter what as align_c can't return
-        NULL
+        Returns a dictionary no matter what as `align_c` can't return ``NULL``
 
         Args:
-            gap_open: Penalty for gap_open. default 3
-            gap_extension: Penalty for gap_extension. default 1
-            start_idx: Index to start search. default 0
+            gap_open: Penalty for ``gap_open``. default 3
+            gap_extension: Penalty for ``gap_extension``. default 1
+            start_idx: Index to start search. Default 0
             end_idx: Index to end search (trying to avoid a
-                target region). default 0 means use whole reference length
+                target region). Default 0 means use whole reference length
 
         Returns:
-            Alignment with keys `CIGAR`,        <for depicting alignment>
-                                `optimal_score`,
-                                `sub-optimal_score`,
-                                `reference_start`, <index into reference>
-                                `reference_end`,   <index into reference>
-                                `read_start`,  <index into read>
-                                `read_end`     <index into read>
+            Alignment with keys ``CIGAR``           <for depicting alignment>
+                                ``optimal_score``
+                                ``sub-optimal_score``
+                                ``reference_start`` <index into reference>
+                                ``reference_end``   <index into reference>
+                                ``read_start`       <index into read>
+                                ``read_end``        <index into read>
 
         Raises:
             ValueError: Negative indexing not supported
@@ -474,7 +582,9 @@ cdef class AlignmentMgr:
             end_idx_final = end_idx
         search_length = end_idx_final - start_idx
 
-        cigar = None
+        # NOTE: .. deprecated ``None`` type for Alignment.CIGAR
+        # cigar_str = None
+        cigar_str = ''
 
         if self.reference is None:
             raise ValueError('Call set_reference first')
@@ -486,34 +596,37 @@ cdef class AlignmentMgr:
             search_length,
         )
         if result.cigar != NULL:
-            cigar = ""
+            cigar_str_list = []
+            cigar_tuple_list = []
             for c in range(result.cigarLen):
                 letter = cigar_int_to_op(result.cigar[c])
                 letter_int = letter
                 length = cigar_int_to_len(result.cigar[c])
-                cigar += "%d%s" % (<int>length, chr(letter_int))
+                idx_tuple = (<int>length, chr(letter_int))
+                cigar_str_list.append('%d%s' % idx_tuple)
+                cigar_tuple_list.append(idx_tuple)
+            cigar_str = ''.join(cigar_str_list)
         out = Alignment(
-            cigar,
+            cigar_str,
             result.score1,
             result.score2,
             result.ref_begin1,
             result.ref_end1,
             result.read_begin1,
             result.read_end1,
+            cigar_tuple_list,
         )
         align_destroy(result)
         return out
     # end def
 
-    cdef int build_dna_score_matrix(
+    def build_dna_score_matrix(
             self,
-            const uint8_t match_score,
-            const uint8_t mismatch_penalty,
-            int8_t* matrix,
-    ) except -1:
+    ):
         '''Mismatch_penalty should be positive
 
-        The score matrix looks like
+        The score matrix looks like:
+
                             A,  C,  G,  T,  N
         score_matrix  = {   2, -2, -2, -2,  0, // A
                            -2,  2, -2, -2,  0, // C
@@ -522,31 +635,32 @@ cdef class AlignmentMgr:
                             0,  0,  0,  0,  0  // N
                         }
 
-        Args:
-            match_score: Match score
-            mismatch_penalty: Mismatch penalty
-            matrix: Pointer to matrix to populate
+        Hard coded to a 5 x 5 matrix so this should not be called externally
+        as of now
 
-        Returns:
-            0
-
+        Uses :attr:`match_score`: Match score
+            :attr:`mismatch_penalty`: Mismatch penalty
+            :attr:`score_matrix`: Pointer to matrix to populate
         '''
         cdef:
             Py_ssize_t i, j
             Py_ssize_t idx = 0
+            int8_t* matrix = self.score_matrix
+
+            int8_t match_score = <uint8_t>   self._match_score
+            int8_t neg_mismatch_penalty = <int8_t> (-self._mismatch_penalty)
 
         for i in range(4):
             for j in range(4):
                 if i == j:
-                    matrix[idx] =  <int8_t> match_score
+                    matrix[idx] = match_score
                 else:
-                    matrix[idx] = <int8_t> (-mismatch_penalty)
+                    matrix[idx] = neg_mismatch_penalty
                 inc(idx)
-            matrix[idx] = 0;
+            matrix[idx] = 0
             inc(idx)
         for i in range(5):
             matrix[inc(idx)] = 0
-        return 0
 
 
 def force_align(

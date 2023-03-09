@@ -63,7 +63,7 @@ void ssw_writer(
     const int8_t* table = DNA_BASE_LUT;
     fprintf(
         stdout,
-        "optimal_score: %d\tsub-optimal_score: %d\t\n",
+        "optimal_score: %d\nsub-optimal_score: %d\n",
         a->score1,
         a->score2
     );
@@ -74,9 +74,9 @@ void ssw_writer(
             a->ref_begin1
         );
     }
-    fprintf(stdout, "target_end: %d\t\n", a->ref_end1);
+    fprintf(stdout, "target_end: %d\n", a->ref_end1);
     if (a->read_begin1 >= 0) {
-        fprintf(stdout, "query_begin: %d\t", a->read_begin1);
+        fprintf(stdout, "query_begin: %d\n", a->read_begin1);
     }
     fprintf(stdout, "query_end: %d\n\n", a->read_end1);
     if (a->cigar) {
