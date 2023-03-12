@@ -52,6 +52,8 @@ import sys
 PACKAGE_PATH = op.abspath(op.dirname(__file__))
 MODULE_PATH = op.join(PACKAGE_PATH, 'ssw')
 LIB_PATH = op.join(MODULE_PATH, 'lib')
+TESTS_PATH = op.join(PACKAGE_PATH, 'tests')
+
 
 COMMON_INCLUDE = ['ssw/lib/CSSWL/src', 'ssw/lib']
 
@@ -64,13 +66,24 @@ else:
     ]
 
 # source files to include in installation for tar.gz
-SSW_FILES = [
+SSWPY_FILES = [
     op.relpath(op.join(_root, _f), MODULE_PATH)
     for _root, _, _files in os.walk(LIB_PATH)
     for _f in _files
     if (
-        ('.h' in _f) or ('.c' in _f) or ('.cpp' in _f)
+        ('.h' in _f) or
+        ('.c' in _f) or
+        ('.cpp' in _f) or
+        ('.md' in _f) or
+        ('.pyx' in _f) or
+        ('.pxd' in _f) or
+        ('Makefile' in _f)
     )
+]
+
+SSWPY_TEST_FPS = [
+    op.relpath(op.join(root, fp), MODULE_PATH) for root, _, fps in
+    os.walk(TESTS_PATH) for fp in fps
 ]
 
 ALIGNMENTMGR_EXT = Extension(
@@ -133,7 +146,7 @@ setup(
     url='https://github.com/libnano/ssw-py',
     packages=['ssw'],
     ext_modules=try_cythonize([ALIGNMENTMGR_EXT]),
-    package_data={'ssw': SSW_FILES},
+    package_data={'ssw': SSWPY_FILES + SSWPY_TEST_FPS},
     description=ssw.DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     license=ssw.__license__,

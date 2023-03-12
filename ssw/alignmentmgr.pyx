@@ -1,8 +1,28 @@
 # cython: language_level=3, boundscheck=False, wraparound=False
-# Copyright 2023 Nick Conway; Copyright 2018, Nick Conway; Wyss Institute
-# Harvard University
+# Copyright (C) 2023, Nick Conway
+# Copyright (C) 2014-2018, Nick Conway; Wyss Institute Harvard University
 #
-# See LICENSE.md for full MIT license.
+# The MIT License
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+# http://www.opensource.org/licenses/mit-license.php
 '''
 ssw.alignmentmgr
 ~~~~~~~~~~~~~~~~
@@ -64,12 +84,17 @@ cdef extern from "ssw.h":
     s_profile* ssw_init(
         const int8_t*, const int32_t,
         const int8_t*, const int32_t,
-        const int8_t)
+        const int8_t
+    )
+
     void init_destroy(s_profile*)
+
     s_align* ssw_align(
         const s_profile*, const int8_t*, int32_t, const uint8_t,
         const uint8_t, const uint8_t,
-        const uint16_t, const int32_t, const int32_t)
+        const uint16_t, const int32_t, const int32_t
+    ) nogil
+
     void align_destroy(s_align*)
     char cigar_int_to_op(uint32_t)
     uint32_t cigar_int_to_len(uint32_t)
@@ -78,15 +103,54 @@ cdef extern from "ssw.h":
 
 import warnings as pywarnings
 from typing import (
-    List,
     Optional,
     Tuple,
     Union,
 )
 
-from .alignment import Alignment
+from .alignmenttuple import Alignment
 
 SNAKE_CASE_DEPRECATED_MSG = 'Function deprecated please use "%s" instead'
+
+
+class BitwiseAlignmentFlag:
+    '''``bitwise_flag`` (from high- to low-bit) for :meth:`AlignmentMgr.align`
+
+    Attributes:
+        best_idxs_no_cigar: Bit 5. When set as 1, ``ssw_align`` will return
+            the best alignment beginning position;
+            NOTE: this is setting ``bitwise_flag == 8``
+
+        distance_filter: Bit 6.  When set as 1::
+
+                if (
+                    ((reference_end - reference_start) < distance_filter) and
+                    ((read_end - read_start) < distance_filter)
+                )
+
+            (whatever bit 5 is set) the function will return the best
+            alignment beginning position and cigar;
+            NOTE: this is setting ``bitwise_flag == 4``
+
+        score_filter: Bit 7. When set as 1, if the best
+            ``alignment_score >= score_filter``, (whatever bit 5 is set as) the
+            function  will return the best alignment beginning position and
+            cigar; NOTE: this is setting ``bitwise_flag == 2``
+
+        best_idxs: Bit 8. When set as 1, (whatever bit 5, 6 or 7 are set as) the
+            function will always return the best alignment beginning position
+            and cigar.
+            NOTE: this is setting ``bitwise_flag = 1``
+
+        end_idxs_only_no_cigar: When ``bitwise_flag == 0``, only the optimal
+            and sub-optimal scores and the optimal alignment ending position
+            will be returned.
+    '''
+    end_idxs_only_no_cigar =    0
+    best_idxs =                 1  # includes cigar
+    score_filter =              2  # cutoff at ``score_filter`` arg
+    distance_filter =           4  # cutoff at ``distance_filter`` arg distance
+    best_idxs_no_cigar =        8
 
 
 cdef inline str convert_bytes_to_str(s):
@@ -126,6 +190,12 @@ STR_T = Union[str, bytes]
 
 cdef class AlignmentMgr:
     '''Class to manage SSW-based alignment
+
+    Attributes:
+        read: Read sequence python string or bytes-string
+        reference: Reference sequence python string or bytes-string
+        match_score: 0 to 255 value for scoring matches
+        mismatch_penalty: 0 to 255 value penalty for mismatches
     '''
     cdef:
         int8_t* score_matrix
@@ -164,7 +234,7 @@ cdef class AlignmentMgr:
 
         Args:
             match_score: 0 to 255 value for scoring matches
-            mismatch_penalty: 0 to 255 value or scoring mismatches
+            mismatch_penalty: 0 to 255 value penalty for mismatches
 
         '''
         # Hard coded to a 5 x 5 matrix
@@ -180,8 +250,8 @@ cdef class AlignmentMgr:
 
         self.build_dna_score_matrix()
 
-        self.read = None
-        self.reference = None
+        self.read = ''
+        self.reference = ''
     # end def
 
     def __dealloc__(self):
@@ -280,7 +350,7 @@ cdef class AlignmentMgr:
         so as to be able to call ssw terminal print functions
 
         Args:
-            result: :class:`ssw.alignment.Alignment` containing the result from
+            result: :class:`ssw.alignmenttuple.Alignment` containing the result from
                 a call to :meth:`align`
             start_idx: index to start printing from. defaults to 0
 
@@ -438,6 +508,9 @@ cdef class AlignmentMgr:
             int gap_extension,
             Py_ssize_t start_idx,
             int32_t mod_ref_length,
+            uint8_t bitwise_flag,
+            uint16_t distance_filter,
+            uint16_t score_filter,
     ) except NULL:
         '''C version of the alignment code
 
@@ -446,7 +519,14 @@ cdef class AlignmentMgr:
             gap_extension: The absolute value of gap extension penalty
             start_idx: The start index of the reference array to begin the s
                 rearch
-            mod_ref_length: Length of the target sequence
+            mod_ref_length: Length of the target reference sequence
+            bitwise_flag: Flag using a member of :class:`BitwiseAlignmentFlag`
+            distance_cutoff: Filter by index start to end distances less than
+                this value.  see :class:`BitwiseAlignmentFlag` docs for details
+                ``bitwise_flag=BitwiseAlignmentFlag.distance_filter``
+            score_cutoff: Filter by fits with a score greater score value cutoff
+                see :class:`BitwiseAlignmentFlag` docs for details
+                ``bitwise_flag=BitwiseAlignmentFlag.score_filter``
 
         Returns:
             ``s_align`` pointer results
@@ -467,59 +547,25 @@ cdef class AlignmentMgr:
             # Should be read_length divided by 2
             int32_t mask_len = read_length // 2
 
-            # ``bitwise_flag`` (from high to low)
-            #
-            # bit 5: when set as 1, ``ssw_align`` will return the best alignment
-            #     beginning position;
-            # bit 6: when set as 1,
-            #     if (
-            #         ((reference_end - reference_start) < distance_filter) &&
-            #         ((read_end - read_start) < distance_filter)
-            #     )
-            #
-            #     (whatever bit 5 is setted) the function will return the best
-            #     alignment beginning position and cigar;
-            #
-            # bit 7: when set as 1, if the best `alignment_score >= score_filters`,
-            #     (whatever bit 5 is setted) the function will return the best
-            #     alignment beginning position and cigar;
-            #     NOTE: this is setting `bitwise_flag = 2`
-            #
-            # bit 8: when set as 1, (whatever bit 5, 6 or 7 is setted) the
-            #     function will always return the best alignment beginning
-            #     position and cigar.
-            #
-            #     NOTE: this is setting `bitwise_flag = 1`
-            #
-            # When flag == 0, only the optimal and sub-optimal scores and the
-            # optimal alignment ending position will be returned.
-            uint8_t bitwise_flag = 1
-
-            #`score_filters`: when bit 7 of flag is setted as 1 and bit 8 is
-            # set as 0, `score_filters` will be used (Please check the
- 			# decription of the flag parameter for detailed usage.)
-            uint16_t score_filters = 0
-
-            #`distance_filter`: when bit 6 of flag is setted as 1 and bit 8 is
-            # set as 0, `distance_filter` will be used (Please check the
-            # decription of the flag parameter for detailed usage.)
-            uint16_t distance_filter = 0
+            s_profile* profile = self.profile
+            int8_t* ref_arr = self.ref_arr
 
         # Guard the ``mask_len`` parameter
         mask_len = 15 if mask_len < 15 else mask_len
 
-        if self.profile != NULL:
-            result = ssw_align(
-                self.profile,
-                &self.ref_arr[start_idx],
-                mod_ref_length,
-                gap_open,
-                gap_extension,
-                bitwise_flag,
-                score_filters,
-                distance_filter,
-                mask_len,
-            )
+        if profile != NULL:
+            with nogil:
+                result = ssw_align(
+                    self.profile,
+                    &ref_arr[start_idx],
+                    mod_ref_length,
+                    gap_open,
+                    gap_extension,
+                    bitwise_flag,
+                    score_filter,
+                    distance_filter,
+                    mask_len,
+                )
         else:
             raise ValueError('Must set profile first via `set_read`')
         if result == NULL:
@@ -533,6 +579,9 @@ cdef class AlignmentMgr:
             gap_extension: int = 1,
             start_idx: int = 0,
             end_idx: int = 0,
+            bitwise_flag: int = BitwiseAlignmentFlag.best_idxs,
+            distance_cutoff: int = 0,
+            score_cutoff: int = 0,
     ) -> Alignment:
         '''Align a read to the reference with optional index offseting
 
@@ -544,15 +593,16 @@ cdef class AlignmentMgr:
             start_idx: Index to start search. Default 0
             end_idx: Index to end search (trying to avoid a
                 target region). Default 0 means use whole reference length
+            bitwise_flag: Flag using a member of :class:`BitwiseAlignmentFlag`
+            distance_cutoff: Filter by index start to end distances less than
+                this value.  see :class:`BitwiseAlignmentFlag` docs for details
+                ``bitwise_flag=BitwiseAlignmentFlag.distance_filter``
+            score_cutoff: Filter by fits with a score greater score value cutoff
+                see :class:`BitwiseAlignmentFlag` docs for details
+                ``bitwise_flag=BitwiseAlignmentFlag.score_filter``
 
         Returns:
-            Alignment with keys ``CIGAR``           <for depicting alignment>
-                                ``optimal_score``
-                                ``sub-optimal_score``
-                                ``reference_start`` <index into reference>
-                                ``reference_end``   <index into reference>
-                                ``read_start`       <index into read>
-                                ``read_end``        <index into read>
+            :class:`ssw.alignmenttuple.Alignment` instance
 
         Raises:
             ValueError: Negative indexing not supported
@@ -585,19 +635,32 @@ cdef class AlignmentMgr:
         # NOTE: .. deprecated ``None`` type for Alignment.CIGAR
         # cigar_str = None
         cigar_str = ''
-
+        cigar_str_list = []
         if self.reference is None:
             raise ValueError('Call set_reference first')
+
+
+        #`distance_filter`: when bit 6 of flag is set as 1 and bit 8 is
+        # set as 0, `distance_filter` will be used (Please check the
+        # decription of the flag parameter for detailed usage.)
+        cdef uint16_t _distance_cutoff = distance_cutoff
+
+        #`score_cutoff`: when bit 7 of flag is set as 1 and bit 8 is
+        # set as 0, `score_cutoff` will be used (Please check the
+        # decription of the flag parameter for detailed usage.)
+        cdef uint16_t _score_cutoff = score_cutoff
 
         cdef s_align* result =  self.align_c(
             gap_open,
             gap_extension,
             start_idx,
             search_length,
+            <uint8_t> bitwise_flag,
+            _distance_cutoff,
+            _score_cutoff,
         )
+        cigar_tuple_list = []
         if result.cigar != NULL:
-            cigar_str_list = []
-            cigar_tuple_list = []
             for c in range(result.cigarLen):
                 letter = cigar_int_to_op(result.cigar[c])
                 letter_int = letter
@@ -638,9 +701,11 @@ cdef class AlignmentMgr:
         Hard coded to a 5 x 5 matrix so this should not be called externally
         as of now
 
-        Uses :attr:`match_score`: Match score
+        Uses:
+            :attr:`match_score`: Match score
             :attr:`mismatch_penalty`: Mismatch penalty
             :attr:`score_matrix`: Pointer to matrix to populate
+
         '''
         cdef:
             Py_ssize_t i, j
@@ -678,7 +743,7 @@ def force_align(
         aligner: pass an existing :class:`AlignmentMgr` object
 
     Returns:
-        :class:`ssw.alignment.Alignment` result
+        :class:`ssw.alignmenttuple.Alignment` result
 
     Raises:
         ValueError: No solution found
@@ -715,7 +780,7 @@ def format_force_align(
     Args:
         read: Read sequence python string or bytes-string
         reference: Reference sequence python string or bytes-string
-        alignment: :class:`ssw.alignment.Alignment` named tuple
+        alignment: :class:`ssw.alignmenttuple.Alignment` named tuple
         do_print: Default is ``False``. If ``True``, print output
 
     Returns:

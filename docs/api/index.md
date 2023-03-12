@@ -7,6 +7,6 @@ and classes contained within **ssw-py**.
 :maxdepth: 2
 
 alignmentmgr
-alignment
+alignmenttuple
 printer
 ```

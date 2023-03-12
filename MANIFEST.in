@@ -1,0 +1,14 @@
+include README.md LICENSE.md CHANGES setup.py
+include .pre-commit-config.yaml dev-requirements.txt setup.cfg
+include ssw/*.pxd ssw/*.pyx ssw/*.h
+include ssw/lib/CSSWL/src/*.h ssw/lib/CSSWL/src/*.c ssw/lib/CSSWL/src/Makefile
+include ssw/lib/CSSWL/README.md
+include ssw/lib/*.h include ssw/lib/*.c
+include docs/*.bat
+include docs/*.md
+include docs/api/*.md
+include docs/docs-requirements.txt
+include docs/Makefile docs/conf.py
+include examples/*.py
+recursive-include tests *.py
+prune ssw/alignmentmgr.c

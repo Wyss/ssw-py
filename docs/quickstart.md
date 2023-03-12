@@ -7,7 +7,7 @@
 
 ## Motivation
 
-`ssw-py` exists to help oligo alignment in python.  The upstream [SSW Library](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library) is quality cross-platform solution to use as the foundation of this tool.
+**ssw-py** exists to help oligo alignment in python.  The upstream [SSW Library](https://github.com/mengyao/Complete-Striped-Smith-Waterman-Library) is quality cross-platform solution to use as the foundation of this tool.
 
 ## Requirements
 
@@ -31,15 +31,49 @@ If your Python version and platform fall outside this such as Linux `aarch64` it
 
 ## Alignment
 
-The {py:mod}`ssw` module includes support for
+```{eval-rst}
+The :py:mod:`ssw` module includes support for doing alignments of a "read"
+sequence to a "reference" sequence.  Users can choose to make these two values
+Python strings or Python bytes-strings as the :py:class:`ssw.alignmentmgr.AlignmentMgr` supports
+both data types for its class attributes and methods.
+```
 
 ### Workflow
 
-The easiest way to run the code is
-Example usage:
-
+The easiest way to run the code is below:
 ```python
+from ssw import AlignmentMgr
+
+# Reference sequence
+ref_seq = 'CAGCCTTTCTGACCCGGAAATCAAAATAGGCACAACAAA'
+# Read sequence
+read_seq = 'CTGAGCCGGTAAATC'
+
+# Set the AlignmentMgr instance to run one or
+# more alignment computations with by specifying a match score or
+align_mgr = AlignmentMgr(
+    match_score=2,
+    mismatch_penalty=2,
+)
+align_mgr.set_read(read_seq)
+align_mgr.set_reference(ref_seq)
+
+# Compute the alignment
+alignment = align_mgr.align(
+    gap_open=3,
+    gap_extension=1,
+)
+
+# Print the Alignment tuple
+print(alignment)
+
+# Print a formated result
+align_mgr.print_result(alignment)
+
 ```
+
+For more detailed exampls refer to [examples/blast.py](https://github.com/libnano/ssw-py/blob/1.0.0-staging/example/blast.py) and [test/test_ssw.py](https://github.com/libnano/ssw-py/blob/1.0.0-staging/tests/test_ssw.py)
+
 
 ## Advanced Installation
 
@@ -108,7 +142,7 @@ Contributions that improve the stability, compatibility or test coverage are
 best way to interface with the project and dev team.  Feature requests via
 GitHub issues are also welcome.
 
-Contact the `ssw-py` maintainers prior to beginning your work to make sure
+Contact the **ssw-py** maintainers prior to beginning your work to make sure
 it makes sense for the project.
 
 By contributing, you also agree to release your code under the MIT License
