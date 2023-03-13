@@ -1,21 +1,30 @@
 # Changelog
 
-## Version 1.0.0 (March 11, 2023)
+## Version 1.0.0 (March 13, 2023)
 - Support for Python 3.8 through 3.11
 - [pre-commit](https://pre-commit.com) added to repo and code sanitized
 - GitHub Action automated testing with `pytest`
 - GitHub Action based wheel for PyPi support following the CPython EOL model. See https://devguide.python.org/versions/
-- documentation added using [Sphinx](https://www.sphinx-doc.org/en/master/index.html) and [MyST](https://myst-parser.readthedocs.io/en/latest/) Markdown
-- Documentation build on version tag using GitHub action in `update-docs.yml`
+- Documentation added using [Sphinx](https://www.sphinx-doc.org/en/master/index.html) and [MyST](https://myst-parser.readthedocs.io/en/latest/) Markdown
+- Documentation updates for missing example content and style.
+- Documentation build on version tag using GitHub Action workflow in `update-docs.yml`
 - docstrings updated
 - Updated `LICENSE.md` copyright for 2023
-- `README.md` updated to add information regarding `sse2neon.h` macro for arm64 support
+- Added `sse2neon.h` macro for arm64 support
 - Project url updated in `setup.py`.
 - Made paths platform independent in `setup.py`
 - removed SSW Library java and demo data files for clarity since they are unused. Updated `Makefile` to remove java build
 - Code updated with warnings for deprecated camelCase methods for snake_case migration.
 - Test coverage added for deprecation warnings
 - Tests updated to check `Alignment` named tuples
-- `ssw-py-ci-github-action.yml` github action workflow added
+- `ssw-py-ci-github-action.yml` github action workflow added for automated CI
 - `sswpy.pyx` renamed to `alignmentmgr.pyx` and `SSW` class is now `AlignmentMgr`.
+- `alignmenttuple.py` module for result tuple datastructure added
 - `ssw/__init__.py` aliases `AlignmentMgr` to `SSW` for deprecated support
+- `.github/workflows/build-wheels-pypi.yml` added
+- `README.md` updated for completion including badges
+- Added `BitwiseAlignmentFlag` class and `bitwise_flag`, `distance_cutoff`, and `score_cutoff` arguments to `AlignmentMgr.align` to enable more SSW upstream features.
+- Updated `test_ssw.py` to test `bitwise_flag` and `score_filter` and `distance_filter`
+- Added `MANIFEST.in` and `setup.package_data` updated for completion.
+- `ssw.alignmentmgr.AlignmentMgr.align_c` runs `nogil` now.
+- PyPI builds using `build-wheels-pypi.yml` GitHub Action workflow on version tag
