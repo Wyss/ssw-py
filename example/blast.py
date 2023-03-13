@@ -6,7 +6,7 @@ example.blast
 
 Example derivation of upstream C libraries ``example.c``
 
-Calls Python ``sswpy_write`` to display an :meth:`ssw.alignment.Alignment`
+Calls Python ``sswpy_write`` to display an :meth:`ssw.alignmenttuple.Alignment`
 result
 
 Also call :meth:`ssw.alignmentmgr.AlignmentMgr.print_result` code to print out
@@ -33,7 +33,7 @@ def sswpy_write(
     '''Print a BLAST-like output
 
     Args:
-        alignment: :class:`ssw.alignment.Alignment` named tuple
+        alignment: :class:`ssw.alignmenttuple.Alignment` named tuple
         ref_seq: Reference sequence python string or bytes-string
         read_seq: Read sequence python string or bytes-string
 
